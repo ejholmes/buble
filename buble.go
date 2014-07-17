@@ -50,6 +50,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	req := &Request{}
 
 	h.HandlerFunc(resp, req)
+
+	w.WriteHeader(resp.Status)
 }
 
 // Formatter is an interface for encoding/decoding requests/responses.
@@ -71,7 +73,9 @@ func (fmtr *JSONFormatter) Decode(r *http.Request, f Form) {
 	json.NewDecoder(r.Body).Decode(f)
 }
 
-// Encode encodes the Resource into the response.
+// Encode encodes the Resource into the response and sets the
+// Content-Type header to "application/json".
 func (fmtr *JSONFormatter) Encode(r Resource, w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(r)
 }
