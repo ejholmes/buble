@@ -5,27 +5,31 @@ import (
 	"net/http"
 )
 
-// Form is an interface for validating incoming POST/PUT/PATCH data.
-type Form interface {
-	Validate() error
-}
+// DefaultFormatter is the default formatter to use in a Handler
+// if no formatter is specified.
+var DefaultFormatter = &JSONFormatter{}
 
-// Resource is an interface that provides a means for transforming
-// a domain model into an API resource suitable for encoding.
-type Resource interface {
-	Present() interface{}
-}
-
-// Request represents the http.Request and passes along the decoded form
-// associated with the Handler.
+// Request wraps http.Request
 type Request struct {
-	Form Form
+	*http.Request
 }
 
 // Response provides a means for building an http response.
 type Response struct {
-	Resource Resource
+	http.ResponseWriter
+
+	Resource interface{}
 	Status   int
+}
+
+// SetStatus sets the status code for the response.
+func (r *Response) SetStatus(status int) {
+	r.Status = status
+}
+
+// Present sets the resource.
+func (r *Response) Present(v interface{}) {
+	r.Resource = v
 }
 
 // HandlerFunc is a function signature for handling a request.
@@ -34,9 +38,11 @@ type HandlerFunc func(*Response, *Request)
 // Handler represents an API endpoint and implements the http.Handler
 // interface for serving a request.
 type Handler struct {
-	Formatter   Formatter
-	Form        Form
-	Resource    Resource
+	// Formatter is the formatter to use when encoding/decoding the request/response.
+	// The zero value is the DefaultFormatter.
+	Formatter Formatter
+
+	// HandlerFunc is the HandlerFunc to call when a request is handled.
 	HandlerFunc HandlerFunc
 }
 
@@ -47,6 +53,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(resp.Status)
 }
 
+func (h *Handler) formatter() Formatter {
+	if h.Formatter == nil {
+		h.Formatter = DefaultFormatter
+	}
+	return h.Formatter
+}
+
 func (h *Handler) handlerFunc() HandlerFunc {
 	if h.HandlerFunc == nil {
 		panic("no HandlerFunc provided")
@@ -54,13 +67,20 @@ func (h *Handler) handlerFunc() HandlerFunc {
 	return h.HandlerFunc
 }
 
+// Encoder is an interface for encoding a value into an http response.
+type Encoder interface {
+	Encode(interface{}, http.ResponseWriter) error
+}
+
+// Decoder is an interface for decoding the request body into an interface.
+type Decoder interface {
+	Decode(*http.Request, interface{}) error
+}
+
 // Formatter is an interface for encoding/decoding requests/responses.
 type Formatter interface {
-	// Decode takes an http request, decodes the body into Form.
-	Decode(*http.Request, Form)
-
-	// Encode encodes the Resource into the response.
-	Encode(Resource, http.ResponseWriter)
+	Encoder
+	Decoder
 }
 
 // JSONFormatter is an implementation of the Formatter interface for
@@ -69,13 +89,16 @@ type JSONFormatter struct {
 }
 
 // Decode decodes the request body into form.
-func (fmtr *JSONFormatter) Decode(r *http.Request, f Form) {
-	json.NewDecoder(r.Body).Decode(f)
+func (fmtr *JSONFormatter) Decode(r *http.Request, v interface{}) error {
+	if r.Body == nil {
+		return nil
+	}
+	return json.NewDecoder(r.Body).Decode(v)
 }
 
 // Encode encodes the Resource into the response and sets the
 // Content-Type header to "application/json".
-func (fmtr *JSONFormatter) Encode(r Resource, w http.ResponseWriter) {
+func (fmtr *JSONFormatter) Encode(v interface{}, w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(r)
+	return json.NewEncoder(w).Encode(v)
 }

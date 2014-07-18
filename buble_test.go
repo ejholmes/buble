@@ -1,6 +1,7 @@
 package buble
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,37 +12,21 @@ type User struct {
 	ID int
 }
 
-// UserCreateForm implements the Form interface.
-type UserCreateForm struct {
-	Name string
-}
-
-func (f *UserCreateForm) Validate() error {
-	return nil
-}
-
-// UserResource implements the Resource interface.
-type UserResource struct {
-	*User
-}
-
-func (r *UserResource) Present() interface{} {
-	return struct {
-		ID int `json:"int"`
-	}{
-		ID: r.ID,
-	}
-}
-
 func Test_Handler(t *testing.T) {
 	resp := httptest.NewRecorder()
 	h := &Handler{
-		Form:     &UserCreateForm{},
-		Resource: &UserResource{},
 		HandlerFunc: HandlerFunc(func(resp *Response, req *Request) {
+			resp.SetStatus(200)
+			resp.Present(&User{ID: 1})
 		}),
 	}
 
 	req, _ := http.NewRequest("GET", "", nil)
 	h.ServeHTTP(resp, req)
+
+	if resp.Code != 200 {
+		t.Error("Expected 200 OK")
+	}
+
+	fmt.Println(resp.Body)
 }
