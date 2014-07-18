@@ -42,16 +42,16 @@ type Handler struct {
 
 // ServeHTTP implements the http.Handler interface.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	resp, req := &Response{}, &Request{}
+	h.handlerFunc()(resp, req)
+	w.WriteHeader(resp.Status)
+}
+
+func (h *Handler) handlerFunc() HandlerFunc {
 	if h.HandlerFunc == nil {
 		panic("no HandlerFunc provided")
 	}
-
-	resp := &Response{}
-	req := &Request{}
-
-	h.HandlerFunc(resp, req)
-
-	w.WriteHeader(resp.Status)
+	return h.HandlerFunc
 }
 
 // Formatter is an interface for encoding/decoding requests/responses.

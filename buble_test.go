@@ -6,26 +6,26 @@ import (
 	"testing"
 )
 
-// model is some domain model.
-type model struct {
+// User is our domain model.
+type User struct {
 	ID int
 }
 
-// form implements the Form interface.
-type form struct {
-	body string
+// UserCreateForm implements the Form interface.
+type UserCreateForm struct {
+	Name string
 }
 
-func (f *form) Validate() error {
+func (f *UserCreateForm) Validate() error {
 	return nil
 }
 
-// resource implements the Resource interface.
-type resource struct {
-	*model
+// UserResource implements the Resource interface.
+type UserResource struct {
+	*User
 }
 
-func (r *resource) Present() interface{} {
+func (r *UserResource) Present() interface{} {
 	return struct {
 		ID int `json:"int"`
 	}{
@@ -36,8 +36,8 @@ func (r *resource) Present() interface{} {
 func Test_Handler(t *testing.T) {
 	resp := httptest.NewRecorder()
 	h := &Handler{
-		Form:     &form{},
-		Resource: &resource{},
+		Form:     &UserCreateForm{},
+		Resource: &UserResource{},
 		HandlerFunc: HandlerFunc(func(resp *Response, req *Request) {
 		}),
 	}
