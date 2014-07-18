@@ -1,7 +1,6 @@
 package buble
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,7 +8,7 @@ import (
 
 // User is our domain model.
 type User struct {
-	ID int
+	ID int `json:"id"`
 }
 
 func Test_Handler(t *testing.T) {
@@ -28,5 +27,7 @@ func Test_Handler(t *testing.T) {
 		t.Error("Expected 200 OK")
 	}
 
-	fmt.Println(resp.Body)
+	if resp.Body.String() != "{\"id\":1}\n" {
+		t.Error("Expected JSON body")
+	}
 }

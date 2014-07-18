@@ -9,14 +9,16 @@ import (
 // if no formatter is specified.
 var DefaultFormatter = &JSONFormatter{}
 
-// Request wraps http.Request
+// Request wraps http.Request.
 type Request struct {
 	*http.Request
+	Decoder Decoder
 }
 
 // Response provides a means for building an http response.
 type Response struct {
 	http.ResponseWriter
+	Encoder Encoder
 
 	Resource interface{}
 	Status   int
@@ -30,6 +32,12 @@ func (r *Response) SetStatus(status int) {
 // Present sets the resource.
 func (r *Response) Present(v interface{}) {
 	r.Resource = v
+}
+
+// Flush writes the response to the underlying ResponseWriter.
+func (r *Response) Flush() {
+	r.WriteHeader(r.Status)
+	r.Encoder.Encode(r.Resource, r.ResponseWriter)
 }
 
 // HandlerFunc is a function signature for handling a request.
@@ -48,9 +56,12 @@ type Handler struct {
 
 // ServeHTTP implements the http.Handler interface.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	resp, req := &Response{}, &Request{}
+	req := &Request{Request: r, Decoder: h.formatter()}
+	resp := &Response{ResponseWriter: w, Encoder: h.formatter()}
+
 	h.handlerFunc()(resp, req)
-	w.WriteHeader(resp.Status)
+
+	resp.Flush()
 }
 
 func (h *Handler) formatter() Formatter {
