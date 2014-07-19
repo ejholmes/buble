@@ -12,24 +12,22 @@ type User struct {
 }
 
 func Test_Handler(t *testing.T) {
+	type expectation struct {
+		status      int
+		body        string
+		contentType string
+	}
+
 	tests := []struct {
 		fn       HandlerFunc
-		expected struct {
-			status      int
-			body        string
-			contentType string
-		}
+		expected expectation
 	}{
 		{
 			fn: HandlerFunc(func(resp *Response, req *Request) {
 				resp.SetStatus(200)
 				resp.Present(&User{ID: 1})
 			}),
-			expected: struct {
-				status      int
-				body        string
-				contentType string
-			}{
+			expected: expectation{
 				status:      200,
 				body:        `{"id":1}` + "\n",
 				contentType: "application/json",
@@ -39,11 +37,7 @@ func Test_Handler(t *testing.T) {
 			fn: HandlerFunc(func(resp *Response, req *Request) {
 				resp.SetStatus(200)
 			}),
-			expected: struct {
-				status      int
-				body        string
-				contentType string
-			}{
+			expected: expectation{
 				status:      200,
 				body:        `{}` + "\n",
 				contentType: "application/json",
