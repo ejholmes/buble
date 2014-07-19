@@ -15,6 +15,11 @@ type Request struct {
 	Decoder Decoder
 }
 
+// Decode decodes the request body into v.
+func (r *Request) Decode(v interface{}) error {
+	return r.Decoder.Decode(r.Request, v)
+}
+
 // Response provides a means for building an http response.
 type Response struct {
 	http.ResponseWriter

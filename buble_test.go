@@ -1,6 +1,7 @@
 package buble
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +12,11 @@ type User struct {
 	ID int `json:"id"`
 }
 
+// Form object
+type UserCreateForm struct {
+	Name string `json:"name"`
+}
+
 func Test_Handler(t *testing.T) {
 	type expectation struct {
 		status      int
@@ -19,6 +25,7 @@ func Test_Handler(t *testing.T) {
 	}
 
 	tests := []struct {
+		body     string
 		fn       HandlerFunc
 		expected expectation
 	}{
@@ -43,11 +50,26 @@ func Test_Handler(t *testing.T) {
 				contentType: "application/json",
 			},
 		},
+		{
+			body: `{"name":"Eric Holmes"}`,
+			fn: HandlerFunc(func(resp *Response, req *Request) {
+				var f UserCreateForm
+				req.Decode(&f)
+
+				resp.SetStatus(200)
+				resp.Present(f)
+			}),
+			expected: expectation{
+				status:      200,
+				body:        `{"name":"Eric Holmes"}` + "\n",
+				contentType: "application/json",
+			},
+		},
 	}
 
 	for _, test := range tests {
 		resp := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "", nil)
+		req, _ := http.NewRequest("GET", "", bytes.NewReader([]byte(test.body)))
 
 		h := &Handler{HandlerFunc: test.fn}
 		h.ServeHTTP(resp, req)
