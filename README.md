@@ -1,4 +1,4 @@
-# [Buble](https://github.com/ejholmes/buble)
+# [Buble](https://github.com/ejholmes/buble) [![Build Status](https://travis-ci.org/ejholmes/buble.svg?branch=master)](https://travis-ci.org/ejholmes/buble)
 
 [Godoc](http://godoc.org/github.com/ejholmes/buble)
 

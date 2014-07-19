@@ -5,6 +5,7 @@ go:
 
 before_install:
   - go install -a -race std
+  - go get ./...
   - export PATH=$HOME/gopath/bin:$PATH
 
 script:
