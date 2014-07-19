@@ -1,0 +1,12 @@
+language: go
+
+go:
+  - 1.3
+
+before_install:
+  - go install -a -race std
+  - export PATH=$HOME/gopath/bin:$PATH
+
+script:
+  - make test
+  - make example
