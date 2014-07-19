@@ -111,5 +111,11 @@ func (fmtr *JSONFormatter) Decode(r *http.Request, v interface{}) error {
 // Content-Type header to "application/json".
 func (fmtr *JSONFormatter) Encode(v interface{}, w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
+
+	// If we set the Content-Type to application/json, we should always respond with valid json.
+	if v == nil {
+		v = map[string]interface{}{}
+	}
+
 	return json.NewEncoder(w).Encode(v)
 }

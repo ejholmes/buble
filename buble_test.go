@@ -12,22 +12,49 @@ type User struct {
 }
 
 func Test_Handler(t *testing.T) {
-	resp := httptest.NewRecorder()
-	h := &Handler{
-		HandlerFunc: HandlerFunc(func(resp *Response, req *Request) {
-			resp.SetStatus(200)
-			resp.Present(&User{ID: 1})
-		}),
+	tests := []struct {
+		fn          HandlerFunc
+		status      int
+		body        string
+		contentType string
+	}{
+		{
+			fn: HandlerFunc(func(resp *Response, req *Request) {
+				resp.SetStatus(200)
+				resp.Present(&User{ID: 1})
+			}),
+			status:      200,
+			body:        `{"id":1}` + "\n",
+			contentType: "application/json",
+		},
+		{
+			fn: HandlerFunc(func(resp *Response, req *Request) {
+				resp.SetStatus(200)
+			}),
+			status:      200,
+			body:        `{}` + "\n",
+			contentType: "application/json",
+		},
 	}
 
-	req, _ := http.NewRequest("GET", "", nil)
-	h.ServeHTTP(resp, req)
+	for _, test := range tests {
+		resp := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "", nil)
 
-	if resp.Code != 200 {
-		t.Error("Expected 200 OK")
-	}
+		h := &Handler{HandlerFunc: test.fn}
+		h.ServeHTTP(resp, req)
 
-	if resp.Body.String() != "{\"id\":1}\n" {
-		t.Error("Expected JSON body")
+		if resp.Code != test.status {
+			t.Errorf("Status: Want %v, Got %v", test.status, resp.Code)
+		}
+
+		if resp.Body.String() != test.body {
+			t.Errorf("Body: Want %v, Got %v", test.body, resp.Body.String())
+		}
+
+		contentType := resp.HeaderMap.Get("Content-Type")
+		if contentType != test.contentType {
+			t.Errorf("Content-Type: Want %v, Got %v", test.contentType, contentType)
+		}
 	}
 }
