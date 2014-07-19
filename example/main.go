@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ejholmes/buble"
+	"github.com/gorilla/mux"
 )
 
 // Car is our domain model.
@@ -18,15 +19,30 @@ var cars = []Car{
 }
 
 func main() {
-	http.Handle("/cars", &buble.Handler{
-		HandlerFunc: GetCars,
-	})
+	r := mux.NewRouter()
+	r.Handle("/cars", &buble.Handler{
+		HandlerFunc: CarsInfo,
+	}).Methods("GET")
+	r.Handle("/cars", &buble.Handler{
+		HandlerFunc: CarsCreate,
+	}).Methods("POST")
 
-	http.ListenAndServe(":3000", nil)
+	http.ListenAndServe(":3000", r)
 }
 
-// GetCars presents all of the cars.
-func GetCars(resp *buble.Response, req *buble.Request) {
+// CarsCreate adds a new car to the list of cars.
+func CarsCreate(resp *buble.Response, req *buble.Request) {
+	var c Car
+	req.Decode(&c)
+
+	cars = append(cars, c)
+
+	resp.SetStatus(200)
+	resp.Present(c)
+}
+
+// CarsInfo presents all of the cars.
+func CarsInfo(resp *buble.Response, req *buble.Request) {
 	resp.SetStatus(200)
 	resp.Present(cars)
 }
