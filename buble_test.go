@@ -25,6 +25,7 @@ func Test_Handler(t *testing.T) {
 	}
 
 	tests := []struct {
+		method   string
 		body     string
 		fn       HandlerFunc
 		expected expectation
@@ -51,7 +52,8 @@ func Test_Handler(t *testing.T) {
 			},
 		},
 		{
-			body: `{"name":"Eric Holmes"}`,
+			method: "POST",
+			body:   `{"name":"Eric Holmes"}`,
 			fn: HandlerFunc(func(resp *Response, req *Request) {
 				var f UserCreateForm
 				req.Decode(&f)
@@ -68,8 +70,13 @@ func Test_Handler(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		method := test.method
+		if method == "" {
+			method = "GET"
+		}
+
 		resp := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "", bytes.NewReader([]byte(test.body)))
+		req, _ := http.NewRequest(method, "", bytes.NewReader([]byte(test.body)))
 
 		h := &Handler{HandlerFunc: test.fn}
 		h.ServeHTTP(resp, req)
