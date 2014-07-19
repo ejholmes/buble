@@ -17,7 +17,7 @@ type Request struct {
 
 // Decode decodes the request body into v.
 func (r *Request) Decode(v interface{}) error {
-	return r.Decoder.Decode(r.Request, v)
+	return r.Decoder.Decode(r, v)
 }
 
 // ResponseWriter is an interface that wraps http.ResponseWriter with some convenience.
@@ -68,7 +68,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.handlerFunc()(resp, req)
 
 	resp.WriteHeader(resp.Status)
-	resp.Encoder.Encode(resp.Resource, resp.ResponseWriter)
+	resp.Encoder.Encode(resp.Resource, resp)
 }
 
 func (h *Handler) formatter() Formatter {
@@ -87,12 +87,12 @@ func (h *Handler) handlerFunc() HandlerFunc {
 
 // Encoder is an interface for encoding a value into an http response.
 type Encoder interface {
-	Encode(interface{}, http.ResponseWriter) error
+	Encode(interface{}, ResponseWriter) error
 }
 
 // Decoder is an interface for decoding the request body into an interface.
 type Decoder interface {
-	Decode(*http.Request, interface{}) error
+	Decode(*Request, interface{}) error
 }
 
 // Formatter is an interface for encoding/decoding requests/responses.
@@ -107,7 +107,7 @@ type JSONFormatter struct {
 }
 
 // Decode decodes the request body into form.
-func (fmtr *JSONFormatter) Decode(r *http.Request, v interface{}) error {
+func (fmtr *JSONFormatter) Decode(r *Request, v interface{}) error {
 	if r.Body == nil {
 		return nil
 	}
@@ -116,7 +116,7 @@ func (fmtr *JSONFormatter) Decode(r *http.Request, v interface{}) error {
 
 // Encode encodes the Resource into the response and sets the
 // Content-Type header to "application/json".
-func (fmtr *JSONFormatter) Encode(v interface{}, w http.ResponseWriter) error {
+func (fmtr *JSONFormatter) Encode(v interface{}, w ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 
 	// If we set the Content-Type to application/json, we should always respond with valid json.
