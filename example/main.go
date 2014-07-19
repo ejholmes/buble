@@ -33,17 +33,17 @@ func main() {
 }
 
 // CarsCreate adds a new car to the list of cars.
-func CarsCreate(resp *buble.Response, req *buble.Request) {
+func CarsCreate(w buble.ResponseWriter, r *buble.Request) {
 	var c Car
-	req.Decode(&c)
+	r.Decode(&c)
 	cars = append(cars, c)
 
-	resp.SetStatus(200)
-	resp.Present(c)
+	w.SetStatus(200)
+	w.Present(c)
 }
 
 // CarsInfo presents all of the cars.
-func CarsInfo(resp *buble.Response, req *buble.Request) {
-	resp.SetStatus(200)
-	resp.Present(cars)
+func CarsInfo(w buble.ResponseWriter, r *buble.Request) {
+	w.SetStatus(200)
+	w.Present(cars)
 }

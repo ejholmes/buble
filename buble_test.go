@@ -31,9 +31,9 @@ func Test_Handler(t *testing.T) {
 		expected expectation
 	}{
 		{
-			fn: HandlerFunc(func(resp *Response, req *Request) {
-				resp.SetStatus(200)
-				resp.Present(&User{ID: 1})
+			fn: HandlerFunc(func(w ResponseWriter, r *Request) {
+				w.SetStatus(200)
+				w.Present(&User{ID: 1})
 			}),
 			expected: expectation{
 				status:      200,
@@ -42,8 +42,8 @@ func Test_Handler(t *testing.T) {
 			},
 		},
 		{
-			fn: HandlerFunc(func(resp *Response, req *Request) {
-				resp.SetStatus(200)
+			fn: HandlerFunc(func(w ResponseWriter, r *Request) {
+				w.SetStatus(200)
 			}),
 			expected: expectation{
 				status:      200,
@@ -54,12 +54,12 @@ func Test_Handler(t *testing.T) {
 		{
 			method: "POST",
 			body:   `{"name":"Eric Holmes"}`,
-			fn: HandlerFunc(func(resp *Response, req *Request) {
+			fn: HandlerFunc(func(w ResponseWriter, r *Request) {
 				var f UserCreateForm
-				req.Decode(&f)
+				r.Decode(&f)
 
-				resp.SetStatus(200)
-				resp.Present(f)
+				w.SetStatus(200)
+				w.Present(f)
 			}),
 			expected: expectation{
 				status:      200,

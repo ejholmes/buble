@@ -20,7 +20,14 @@ func (r *Request) Decode(v interface{}) error {
 	return r.Decoder.Decode(r.Request, v)
 }
 
-// Response provides a means for building an http response.
+// ResponseWriter is an interface that wraps http.ResponseWriter with some convenience.
+type ResponseWriter interface {
+	http.ResponseWriter
+	SetStatus(int)
+	Present(interface{})
+}
+
+// Response is an implementation of the ResponseWriter inteface.
 type Response struct {
 	http.ResponseWriter
 	Encoder Encoder
@@ -39,14 +46,8 @@ func (r *Response) Present(v interface{}) {
 	r.Resource = v
 }
 
-// Flush writes the response to the underlying ResponseWriter.
-func (r *Response) Flush() {
-	r.WriteHeader(r.Status)
-	r.Encoder.Encode(r.Resource, r.ResponseWriter)
-}
-
 // HandlerFunc is a function signature for handling a request.
-type HandlerFunc func(*Response, *Request)
+type HandlerFunc func(ResponseWriter, *Request)
 
 // Handler represents an API endpoint and implements the http.Handler
 // interface for serving a request.
@@ -66,7 +67,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.handlerFunc()(resp, req)
 
-	resp.Flush()
+	resp.WriteHeader(resp.Status)
+	resp.Encoder.Encode(resp.Resource, resp.ResponseWriter)
 }
 
 func (h *Handler) formatter() Formatter {
