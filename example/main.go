@@ -20,9 +20,11 @@ var cars = []Car{
 
 func main() {
 	r := mux.NewRouter()
+
 	r.Handle("/cars", &buble.Handler{
 		HandlerFunc: CarsInfo,
 	}).Methods("GET")
+
 	r.Handle("/cars", &buble.Handler{
 		HandlerFunc: CarsCreate,
 	}).Methods("POST")
@@ -34,7 +36,6 @@ func main() {
 func CarsCreate(resp *buble.Response, req *buble.Request) {
 	var c Car
 	req.Decode(&c)
-
 	cars = append(cars, c)
 
 	resp.SetStatus(200)
