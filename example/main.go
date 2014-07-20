@@ -38,12 +38,12 @@ func CarsCreate(w buble.ResponseWriter, r *buble.Request) {
 	r.Decode(&c)
 	cars = append(cars, c)
 
-	w.SetStatus(200)
-	w.Present(c)
+	w.WriteHeader(200)
+	w.Encode(c)
 }
 
 // CarsInfo presents all of the cars.
 func CarsInfo(w buble.ResponseWriter, r *buble.Request) {
-	w.SetStatus(200)
-	w.Present(cars)
+	w.WriteHeader(200)
+	w.Encode(cars)
 }

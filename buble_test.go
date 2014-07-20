@@ -32,22 +32,12 @@ func Test_Handler(t *testing.T) {
 	}{
 		{
 			fn: HandlerFunc(func(w ResponseWriter, r *Request) {
-				w.SetStatus(200)
-				w.Present(&User{ID: 1})
+				w.WriteHeader(200)
+				w.Encode(&User{ID: 1})
 			}),
 			expected: expectation{
 				status:      200,
 				body:        `{"id":1}` + "\n",
-				contentType: "application/json",
-			},
-		},
-		{
-			fn: HandlerFunc(func(w ResponseWriter, r *Request) {
-				w.SetStatus(200)
-			}),
-			expected: expectation{
-				status:      200,
-				body:        `{}` + "\n",
 				contentType: "application/json",
 			},
 		},
@@ -58,8 +48,8 @@ func Test_Handler(t *testing.T) {
 				var f UserCreateForm
 				r.Decode(&f)
 
-				w.SetStatus(200)
-				w.Present(f)
+				w.WriteHeader(200)
+				w.Encode(f)
 			}),
 			expected: expectation{
 				status:      200,
@@ -69,7 +59,7 @@ func Test_Handler(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		method := test.method
 		if method == "" {
 			method = "GET"
@@ -82,16 +72,16 @@ func Test_Handler(t *testing.T) {
 		h.ServeHTTP(resp, req)
 
 		if resp.Code != test.expected.status {
-			t.Errorf("Status: Want %v, Got %v", test.expected.status, resp.Code)
+			t.Errorf("Status %v: Want %v, Got %v", i, test.expected.status, resp.Code)
 		}
 
 		if resp.Body.String() != test.expected.body {
-			t.Errorf("Body: Want %v, Got %v", test.expected.body, resp.Body.String())
+			t.Errorf("Body %v: Want %v, Got %v", i, test.expected.body, resp.Body.String())
 		}
 
 		contentType := resp.HeaderMap.Get("Content-Type")
 		if contentType != test.expected.contentType {
-			t.Errorf("Content-Type: Want %v, Got %v", test.expected.contentType, contentType)
+			t.Errorf("Content-Type %v: Want %v, Got %v", i, test.expected.contentType, contentType)
 		}
 	}
 }

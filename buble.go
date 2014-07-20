@@ -23,27 +23,18 @@ func (r *Request) Decode(v interface{}) error {
 // ResponseWriter is an interface that wraps http.ResponseWriter with some convenience.
 type ResponseWriter interface {
 	http.ResponseWriter
-	SetStatus(int)
-	Present(interface{})
+	Encode(interface{})
 }
 
 // Response is an implementation of the ResponseWriter inteface.
 type Response struct {
 	http.ResponseWriter
 	Encoder Encoder
-
-	Resource interface{}
-	Status   int
 }
 
-// SetStatus sets the status code for the response.
-func (r *Response) SetStatus(status int) {
-	r.Status = status
-}
-
-// Present sets the resource.
-func (r *Response) Present(v interface{}) {
-	r.Resource = v
+// Encode encodes `v` into the response uses the Encoder.
+func (r *Response) Encode(v interface{}) {
+	r.Encoder.Encode(v, r)
 }
 
 // HandlerFunc is a function signature for handling a request.
@@ -66,9 +57,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	resp := &Response{ResponseWriter: w, Encoder: h.formatter()}
 
 	h.handlerFunc()(resp, req)
-
-	resp.WriteHeader(resp.Status)
-	resp.Encoder.Encode(resp.Resource, resp)
 }
 
 func (h *Handler) formatter() Formatter {
